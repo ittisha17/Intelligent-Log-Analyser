@@ -1,0 +1,37 @@
+import streamlit as st
+import pandas as pd
+from parser import parse_logs
+from detector import detect_threats
+from risk import calculate_risk
+from ai_summary import generate_summary
+
+st.set_page_config(page_title="Security Log Analyzer", layout="wide")
+
+st.title("🔐 Intelligent Security Log Analyzer")
+
+# Upload section
+uploaded_file = st.file_uploader("Upload Log File", type=["log", "txt"])
+
+if uploaded_file:
+    logs = uploaded_file.read().decode("utf-8").split("\n")
+
+    parsed_data = parse_logs(logs)
+    threats = detect_threats(parsed_data)
+    threats = calculate_risk(threats)
+
+    df = pd.DataFrame(threats)
+
+    st.subheader("📊 Threat Dashboard")
+    st.dataframe(df)
+
+    # Metrics
+    st.subheader("📈 Summary")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Total Logs", len(parsed_data))
+    col2.metric("Threats Detected", len(df))
+    col3.metric("High Risk", len(df[df["risk"] == "High"]))
+
+    # AI Summary
+    st.subheader("🤖 AI Security Insights")
+    summary = generate_summary(df)
+    st.write(summary)
